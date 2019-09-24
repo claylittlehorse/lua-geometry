@@ -5,7 +5,8 @@ local function LineSegmentToPoint(segmentPointA, segmentPointB, pointC)
 	local ab = segmentPointB - segmentPointA
 	local t = (pointC - segmentPointA):Dot(ab) / ab:Dot(ab)
 
-	math.clamp(t, 0, 1)
+	if t > 1 then t = 1 end
+	if t < 0 then t = 0 end
 	return segmentPointA + t * ab
 end
 
