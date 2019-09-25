@@ -1,8 +1,7 @@
 local LineSegmentToPointSquared = require(script.LineSegmentToPointSquared)
+local LineSegmentToPoint = require(script.LineSegmentToPoint)
 
 return {
 	LineSegmentToPointSquared = LineSegmentToPointSquared,
-	LineSegmentToPoint = function(...)
-		return LineSegmentToPointSquared(...) ^ 0.5
-	end
+	LineSegmentToPoint = LineSegmentToPoint
 }
