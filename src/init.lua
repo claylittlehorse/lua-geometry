@@ -1,4 +1,5 @@
 return {
 	ClosestPointOn = require(script.ClosestPointOn),
-	DistanceOf = require(script.DistanceOf)
+	ClosestPointsOf = require(script.ClosestPointsOf),
+	DistanceOf = require(script.DistanceOf),
 }
