@@ -2,12 +2,13 @@
 -- Page 127-128: Closest Point on Line Segment To Point
 
 local function LineSegmentToPoint(segmentPointA, segmentPointB, pointC)
-	local ab = segmentPointB - segmentPointA
-	local t = (pointC - segmentPointA):Dot(ab) / ab:Dot(ab)
+	local segmentVector = segmentPointB - segmentPointA
+	local segmentScalar = (pointC - segmentPointA):Dot(segmentVector) / segmentVector:Dot(segmentVector)
 
-	if t > 1 then t = 1 end
-	if t < 0 then t = 0 end
-	return segmentPointA + t * ab
+	local scaledVector = (math.clamp(segmentScalar, 0, 1) * segmentVector)
+	local closestPointOnSegment = segmentPointA + scaledVector
+
+	return closestPointOnSegment
 end
 
 return LineSegmentToPoint
