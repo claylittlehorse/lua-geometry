@@ -1,3 +1,4 @@
 return {
-	LineSegments = require(script.LineSegments)
+	LineSegments = require(script.LineSegments),
+	LineSegmentToTriangle = require(script.LineSegmentToTriangle),
 }
