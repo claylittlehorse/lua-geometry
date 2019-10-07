@@ -1,4 +1,5 @@
 -- Reference: https://gdbooks.gitbooks.io/3dcollisions/content/Chapter4/closest_point_to_triangle.html
+-- License: https://gdbooks.gitbooks.io/3dcollisions/content/
 -- transcribed by cosmoit
 
 local LineSegmentToPoint = require(script.Parent.LineSegmentToPoint)
