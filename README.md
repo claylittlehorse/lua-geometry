@@ -1,2 +1,2 @@
 # lua-collisions
-Primitive collision checks for use in (roblox) lua
+Primitive intersection checks and more for use in (roblox) lua
