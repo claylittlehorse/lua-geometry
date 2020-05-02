@@ -1,7 +1,7 @@
 -- Reference: http://www.r-5.org/files/books/computers/algo-list/realtime-3d/Christer_Ericson-Real-Time_Collision_Detection-EN.pdf
 -- Page 130-132: Distance to Closest Point on AABB
 
-local function PointToAABBSquared(pointA, AABBmax, AABBmin)
+local function DistanceOfPointToAABBSquared(pointA, AABBmax, AABBmin)
 	local px, py, pz = pointA.x, pointA.y, pointA.z
 	local sqDist = 0
 	if px < AABBmax.x then sqDist = sqDist + (AABBmax.x - px)^2 end
@@ -13,4 +13,4 @@ local function PointToAABBSquared(pointA, AABBmax, AABBmin)
 	return sqDist
 end
 
-return PointToAABBSquared
+return DistanceOfPointToAABBSquared

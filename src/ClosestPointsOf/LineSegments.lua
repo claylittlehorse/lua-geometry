@@ -6,7 +6,7 @@ local EPSILON = 1e-06 -- (0.000001)
 -- epsilon. If we were using a lua implementation of vectors (or just lua
 -- numbers in general), our math would have double precision and 1e-09 would probably be better suited.
 
-local function LineSegments(a1, a2, b1, b2)
+local function ClosestPointsOfLineSegments(a1, a2, b1, b2)
 	-- Where a1 & a2 are points of segment a, b1 & b2 are points of segment b,
 	local aVector = a2 - a1
 	local bVector = b2 - b1
@@ -78,4 +78,4 @@ local function LineSegments(a1, a2, b1, b2)
 	end
 end
 
-return LineSegments
+return ClosestPointsOfLineSegments

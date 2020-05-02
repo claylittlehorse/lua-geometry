@@ -25,7 +25,7 @@ local function squareDistance(vector)
 	return vector:Dot(vector)
 end
 
-local function TriangleToPoint(a, b, c, p)
+local function ClosestPointOnTriangleToPoint(a, b, c, p)
 	local n = (b - a):Cross(c - a).unit
 	local projectedPoint = ClosestPointOnPlaneToPoint(p, (a + b + c) / 3, n)
 	if isPointInTriangle(a, b, c, projectedPoint) then
@@ -55,4 +55,4 @@ local function TriangleToPoint(a, b, c, p)
 	end
 end
 
-return TriangleToPoint
+return ClosestPointOnTriangleToPoint

@@ -4,7 +4,7 @@
 -- Distance squared allows for more efficient distance checks, if the value
 -- you're checking against is also squared. Essentially, solving out the root
 -- allows the calculation to be done much faster.
-local function LineSegmentToPointSquared(segmentPointA, segmentPointB, pointC)
+local function DistanceOfLineSegmentToPointSquared(segmentPointA, segmentPointB, pointC)
 	local ab = segmentPointB - segmentPointA
 	local ac = pointC - segmentPointA
 	local bc = pointC - segmentPointB
@@ -24,4 +24,4 @@ local function LineSegmentToPointSquared(segmentPointA, segmentPointB, pointC)
 	return ac:Dot(ac) - e * e / f
 end
 
-return LineSegmentToPointSquared
+return DistanceOfLineSegmentToPointSquared

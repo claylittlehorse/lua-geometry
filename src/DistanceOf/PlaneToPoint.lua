@@ -2,8 +2,8 @@
 -- Page 126-127: Distance of Plane to Point
 
 -- ||planeNormal|| == 1;
-local function PlaneToPoint(pointA, planePosition, planeNormal)
+local function DistanceOfPlaneToPoint(pointA, planePosition, planeNormal)
 	return pointA:Dot(planeNormal) - planePosition
 end
 
-return PlaneToPoint
+return DistanceOfPlaneToPoint

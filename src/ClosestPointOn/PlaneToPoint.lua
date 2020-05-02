@@ -2,9 +2,9 @@
 -- Page 126-127: Distance of Plane to Point
 
 -- planeNormal.Magnitude == 1;
-local function PlaneToPoint(pointA, planePosition, planeNormal)
+local function ClosestPointOnPlaneToPoint(pointA, planePosition, planeNormal)
 	local t = pointA:Dot(planeNormal) - planePosition:Dot(planeNormal)
 	return pointA - t * planeNormal
 end
 
-return PlaneToPoint
+return ClosestPointOnPlaneToPoint
