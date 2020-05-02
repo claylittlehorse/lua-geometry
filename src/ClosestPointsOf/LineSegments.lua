@@ -1,10 +1,8 @@
 -- Reference: http://www.r-5.org/files/books/computers/algo-list/realtime-3d/Christer_Ericson-Real-Time_Collision_Detection-EN.pdf
 -- Page 148-151: Closest Points of Two Line Segments
 
-local EPSILON = 1e-06 -- (0.000001)
--- Roblox vectors use single precision values, so this is a good quantity for
--- epsilon. If we were using a lua implementation of vectors (or just lua
--- numbers in general), our math would have double precision and 1e-09 would probably be better suited.
+local Constants = require(script.Parent.Parent.Constants)
+local EPSILON = Constants.EPSILON
 
 local function ClosestPointsOfLineSegments(a1, a2, b1, b2)
 	-- Where a1 & a2 are points of segment a, b1 & b2 are points of segment b,
