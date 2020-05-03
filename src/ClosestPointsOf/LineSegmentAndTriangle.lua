@@ -25,12 +25,21 @@ local function getPlaneRegionFromBarycentricCoordinates(u, v, w)
 	end
 end
 
-local function intersectionAB()
+local function getPlaneAxesAnd2dSegmentPoints(triA, triEdgeAB, triNormalUnit, primaryPoint, secondaryPoint)
+	local planeXAxis = triEdgeAB.Unit
+	local planeYAxis = triNormalUnit:Cross(planeXAxis)
 
+	local primaryRelativeToTriA = primaryPoint - triA
+	local primaryPoint2d = Vector2.new(primaryRelativeToTriA:Dot(planeXAxis), primaryRelativeToTriA:Dot(planeYAxis))
+	local secondaryRelativeToTriA = secondaryPoint - triA
+	local secondaryPoint2d = Vector2.new(secondaryRelativeToTriA:Dot(planeXAxis), secondaryRelativeToTriA:Dot(planeYAxis))
+
+	return planeXAxis, planeYAxis, primaryPoint2d, secondaryPoint2d
 end
 
-local function intersectionABorIntersectionBC(primaryPoint2d, secondaryPoint2d, )
-
+local function intersectEitherTriEdge(edge1point, edge2point, sharedPoint, primaryPoint2d, secondaryPoint2d)
+	return IntersectionPointOfLineSegments2d(edge1point, sharedPoint, primaryPoint2d, secondaryPoint2d)
+		or IntersectionPointOfLineSegments2d(edge2point, sharedPoint, primaryPoint2d, secondaryPoint2d)
 end
 
 local function ClosestPointsOfLineSegmentAndTriangle(segA, segB, triA, triB, triC)
@@ -91,17 +100,10 @@ local function ClosestPointsOfLineSegmentAndTriangle(segA, segB, triA, triB, tri
 		if secondaryRegion == 0 then
 			return ClosestPointsOfLineSegments(segA, segB, primaryPoint, secondaryPoint)
 		elseif secondaryRegion == 1 then
-			-- Projected segment intersects triEdgeAB
-			local planeXAxis = triEdgeAB.Unit
-			local planeYAxis = triNormalUnit:Cross(planeXAxis)
+			local planeXAxis, planeYAxis, primaryPoint2d, secondaryPoint2d = getPlaneAxesAnd2dSegmentPoints(triA, triEdgeAB, triNormalUnit, primaryPoint, secondaryPoint)
 
 			local triA2d = Vector2.new()
 			local triB2d = Vector2.new(triEdgeAB.Magntiude, 0)
-
-			local primaryRelativeToTriA = primaryPoint - triA
-			local primaryPoint2d = Vector2.new(primaryRelativeToTriA:Dot(planeXAxis), primaryRelativeToTriA:Dot(planeYAxis))
-			local secondaryRelativeToTriA = secondaryPoint - triA
-			local secondaryPoint2d =  Vector2.new(secondaryRelativeToTriA:Dot(planeXAxis), secondaryRelativeToTriA:Dot(planeYAxis))
 
 			local segmentEdgeIntersection2d = IntersectionPointOfLineSegments2d(triA2d, triB2d, primaryPoint2d, secondaryPoint2d)
 
