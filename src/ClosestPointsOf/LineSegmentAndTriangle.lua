@@ -134,9 +134,7 @@ local function ClosestPointsOfLineSegmentAndTriangle(segA, segB, triA, triB, tri
 		return ClosestPointOnLineSegmentToPoint(segA, segB, clampedA), clampedA, nil, nil, projectedSegA, projectedSegB
 	end
 
-	local a, b = ClosestPointsOfLineSegments(segA, segB, clampedA, clampedB)
-
-	return a, b, clampedA, clampedB, projectedSegA, projectedSegB
+	return ClosestPointsOfLineSegments(segA, segB, clampedA, clampedB)
 end
 
 
