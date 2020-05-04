@@ -1,57 +1,105 @@
 local ClosestPointOnPlaneToPoint = require(script.Parent.Parent.ClosestPointOn.PlaneToPoint)
+local ClosestPointOnTriangleToPoint = require(script.Parent.Parent.ClosestPointOn.TriangleToPoint)
 local ClosestPointOnLineSegmentToPoint = require(script.Parent.Parent.ClosestPointOn.LineSegmentToPoint)
+local ClosestPointOnLineSegmentToLineSegment2d = require(script.Parent.Parent.ClosestPointOn.LineSegmentToLineSegment2d)
 local ClosestPointsOfLineSegments = require(script.Parent.LineSegments)
-local IntersectionPointOfLineSegments2d = require(script.Parent.Parent.InteresctionPointOf.LineSegments2d)
+local Utils = require(script.Parent.Parent.Utils)
 
-local function getPlaneRegionFromBarycentricCoordinates(u, v, w)
-	local isUNegative = u < 0
-	local isVNegative = v < 0
-	local isWNegative = w < 0
+local triA2d = Vector2.new()
+local triB2d, triC2d
 
-	if isUNegative and not isVNegative and not isWNegative then
-		return 1
-	elseif isUNegative and not isVNegative and isWNegative then
-		return 2
-	elseif not isUNegative and not isVNegative and isWNegative then
-		return 3
-	elseif not isUNegative and isVNegative and isWNegative then
-		return 4
-	elseif not isUNegative and isVNegative and not isWNegative then
-		return 5
-	elseif isUNegative and isVNegative and not isWNegative then
-		return 6
-	else
-		return 0
+local function getIntersectionForTriangleRegion2d(segA2d, segB2d, triEdgeAB, triEdgeAC, planeXAxis, planeYAxis, region)
+	if region == 0 then
+		-- No intersection
+		return segA2d
+	elseif region == 1 then
+		-- Segment intersects AB
+		triB2d = triB2d or Vector2.new(triEdgeAB.Magnitude, 0)
+		return ClosestPointOnLineSegmentToLineSegment2d(triA2d, triB2d, segA2d, segB2d)
+	elseif region == 3 then
+		-- Segment intersects BC
+		triB2d = triB2d or Vector2.new(triEdgeAB.Magnitude, 0)
+		triC2d = triC2d or Vector2.new(triEdgeAC:Dot(planeXAxis), triEdgeAC:Dot(planeYAxis))
+		return ClosestPointOnLineSegmentToLineSegment2d(triB2d, triC2d, segA2d, segB2d)
+	elseif region == 5 then
+		-- Segment intersects AC
+		triC2d = triC2d or Vector2.new(triEdgeAC:Dot(planeXAxis), triEdgeAC:Dot(planeYAxis))
+		return ClosestPointOnLineSegmentToLineSegment2d(triA2d, triC2d, segA2d, segB2d)
+	elseif region == 2 then
+		-- Segment intersects either AB or BC
+		triB2d = triB2d or Vector2.new(triEdgeAB.Magnitude, 0)
+		triC2d = triC2d or Vector2.new(triEdgeAC:Dot(planeXAxis), triEdgeAC:Dot(planeYAxis))
+		return Utils.intersectCorner2d(triA2d, triC2d, triB2d, segA2d, segB2d)
+	elseif region == 4 then
+		-- Segment intersects either BC or AC
+		triB2d = triB2d or Vector2.new(triEdgeAB.Magnitude, 0)
+		triC2d = triC2d or Vector2.new(triEdgeAC:Dot(planeXAxis), triEdgeAC:Dot(planeYAxis))
+		return Utils.intersectCorner2d(triB2d, triA2d, triC2d, segA2d, segB2d)
+	elseif region == 6 then
+		-- Segment intersects either AC or AB
+		triC2d = triC2d or Vector2.new(triEdgeAC:Dot(planeXAxis), triEdgeAC:Dot(planeYAxis))
+		return Utils.intersectCorner2d(triC2d, triB2d, triA2d, segA2d, segB2d)
 	end
 end
 
-local function getPlaneAxesAnd2dSegmentPoints(triA, triEdgeAB, triNormalUnit, primaryPoint, secondaryPoint)
+local function clampSegmentPointsToTriangle(triA, triB, triC, segARegion, segBRegion, projectedSegA, projectedSegB, triEdgeAB, triEdgeAC, triNormalUnit)
+	if segARegion == segBRegion then
+		if segARegion == 0 then
+			return projectedSegA, projectedSegB
+		elseif segARegion == 6 then
+			return triA
+		elseif segARegion == 2 then
+			return triB
+		elseif segARegion == 4 then
+			return triC
+		end
+	end
+
+	if (segARegion == 1 or segARegion == 2) and (segBRegion == 1 or segBRegion == 2 or segBRegion == 6) then
+		return triA, triB
+	elseif (segARegion == 2 or segARegion == 3) and (segBRegion == 3 or segBRegion == 4) then
+		return triB, triC
+	elseif (segARegion == 4 or segARegion == 5) and (segBRegion == 5 or segBRegion == 6) then
+		return triC, triA
+	end
+
 	local planeXAxis = triEdgeAB.Unit
 	local planeYAxis = triNormalUnit:Cross(planeXAxis)
 
-	local primaryRelativeToTriA = primaryPoint - triA
-	local primaryPoint2d = Vector2.new(primaryRelativeToTriA:Dot(planeXAxis), primaryRelativeToTriA:Dot(planeYAxis))
-	local secondaryRelativeToTriA = secondaryPoint - triA
-	local secondaryPoint2d = Vector2.new(secondaryRelativeToTriA:Dot(planeXAxis), secondaryRelativeToTriA:Dot(planeYAxis))
+	local lineTriASegA = projectedSegA - triA
+	local lineTriASegB = projectedSegB - triA
 
-	return planeXAxis, planeYAxis, primaryPoint2d, secondaryPoint2d
-end
+	local segA2d = Vector2.new(lineTriASegA:Dot(planeXAxis), lineTriASegA:Dot(planeYAxis))
+	local segB2d = Vector2.new(lineTriASegB:Dot(planeXAxis), lineTriASegB:Dot(planeYAxis))
 
-local function intersectEitherTriEdge(edge1point, edge2point, sharedPoint, primaryPoint2d, secondaryPoint2d)
-	return IntersectionPointOfLineSegments2d(edge1point, sharedPoint, primaryPoint2d, secondaryPoint2d)
-		or IntersectionPointOfLineSegments2d(edge2point, sharedPoint, primaryPoint2d, secondaryPoint2d)
+	triB2d, triC2d = nil, nil
+	local clampedA2d = getIntersectionForTriangleRegion2d(segA2d, segB2d, triEdgeAB, triEdgeAC, planeXAxis, planeYAxis, segARegion)
+	local clampedB2d = getIntersectionForTriangleRegion2d(segB2d, segA2d, triEdgeAB, triEdgeAC, planeXAxis, planeYAxis, segBRegion)
+
+	return triA + (planeXAxis * clampedA2d.X) + (planeYAxis * clampedA2d.Y),
+		   triA + (planeXAxis * clampedB2d.X) + (planeYAxis * clampedB2d.Y)
 end
 
 local function ClosestPointsOfLineSegmentAndTriangle(segA, segB, triA, triB, triC)
 	local triEdgeAB = triB - triA
 	local triEdgeAC = triC - triA
-	-- local triEdgeBC = triC - triB
+	-- \local triEdgeBC = triC - triB
 
 	local triNormal = triEdgeAB:Cross(triEdgeAC)
+	local triNormalUnit = triNormal.unit
+
+	local segmentUnit = (segB - segA).unit
+	local segmentTriNormalDotProduct = segmentUnit:Dot(triNormalUnit)
+	if segmentTriNormalDotProduct == 1 or segmentTriNormalDotProduct == -1 then
+		local triPoint = ClosestPointOnTriangleToPoint(triA, triB, triC, segA)
+		local segPoint = ClosestPointOnLineSegmentToPoint(segA, segB, triPoint)
+
+		return segPoint, triPoint, nil, nil, ClosestPointOnPlaneToPoint(segA, triA, triNormalUnit), ClosestPointOnPlaneToPoint(segB, triA, triNormalUnit)
+	end
+
 	local triArea2 = triNormal:Dot(triNormal)
 
 	-- Project points A and B of line segment onto plane of triangle
-	local triNormalUnit = triNormal.unit
 	local projectedSegA = ClosestPointOnPlaneToPoint(segA, triA, triNormalUnit)
 	local projectedSegB = ClosestPointOnPlaneToPoint(segB, triA, triNormalUnit)
 
@@ -72,198 +120,24 @@ local function ClosestPointsOfLineSegmentAndTriangle(segA, segB, triA, triB, tri
 	local vSegB = triNormal:Dot(triCSegB:Cross(triEdgeAC)) / triArea2
 	local wSegB = 1 - uSegB - vSegB
 
-	-- Using barycentric coordinates, we can partition the plane which the
-	-- triangle resides on into 7 regions. Region 0 is the space within the
-	-- triangle, while regions 1-6 represent areas outside of the triangle. (You
-	-- can visualize each of these regions with this reference image here:
-	-- https://imgur.com/a/FCWtrrZ)
-	local segARegion = getPlaneRegionFromBarycentricCoordinates(uSegA, vSegA, wSegA)
-	local segBRegion = getPlaneRegionFromBarycentricCoordinates(uSegB, vSegB, wSegB)
+	local segARegion = Utils.getPlaneRegionFromBarycentricCoordinates(uSegA, vSegA, wSegA)
+	local segBRegion = Utils.getPlaneRegionFromBarycentricCoordinates(uSegB, vSegB, wSegB)
 
-	-- Ensure that primary region is always lower than secondary region. This
-	-- makes our logic breakdown simpler
-	local primaryRegion, secondaryRegion, primaryPoint, secondaryPoint do
-		if segARegion >= segBRegion then
-			primaryRegion = segARegion
-			secondaryRegion = segBRegion
-			primaryPoint = projectedSegA
-			secondaryPoint = projectedSegB
-		elseif segARegion <= segBRegion then
-			primaryRegion = segBRegion
-			secondaryRegion = segARegion
-			primaryPoint = projectedSegB
-			secondaryPoint = projectedSegA
-		end
+	if segBRegion < segARegion then
+		segARegion, segBRegion = segBRegion, segARegion
+		projectedSegA, projectedSegB = projectedSegB, projectedSegA
 	end
 
-	if primaryRegion == 0 then
-		if secondaryRegion == 0 then
-			return ClosestPointsOfLineSegments(segA, segB, primaryPoint, secondaryPoint)
-		elseif secondaryRegion == 1 then
-			local planeXAxis, planeYAxis, primaryPoint2d, secondaryPoint2d = getPlaneAxesAnd2dSegmentPoints(triA, triEdgeAB, triNormalUnit, primaryPoint, secondaryPoint)
+	local clampedA, clampedB = clampSegmentPointsToTriangle(triA, triB, triC, segARegion, segBRegion, projectedSegA, projectedSegB, triEdgeAB, triEdgeAC, triNormalUnit)
 
-			local triA2d = Vector2.new()
-			local triB2d = Vector2.new(triEdgeAB.Magntiude, 0)
-
-			local segmentEdgeIntersection2d = IntersectionPointOfLineSegments2d(triA2d, triB2d, primaryPoint2d, secondaryPoint2d)
-
-			-- Convert intersection point back to 3d
-			local segmentEdgeIntersection = triA + (planeXAxis * segmentEdgeIntersection2d.X) + (planeYAxis * segmentEdgeIntersection2d.Y)
-			return ClosestPointsOfLineSegments(segA, segB, primaryPoint, segmentEdgeIntersection)
-		elseif secondaryRegion == 2 then
-			-- Projected segment intersects triEdgeAB or triEdgeBC
-			local planeXAxis = triEdgeAB.Unit
-			local planeYAxis = triNormalUnit:Cross(planeXAxis)
-
-			local triA2d = Vector2.new()
-			local triB2d = Vector2.new(triEdgeAB.Magntiude, 0)
-			local triC2d = Vector2.new(triEdgeAC:Dot(planeXAxis), triEdgeAC:Dot(planeYAxis))
-
-			local primaryRelativeToTriA = primaryPoint - triA
-			local primaryPoint2d = Vector2.new(primaryRelativeToTriA:Dot(planeXAxis), primaryRelativeToTriA:Dot(planeYAxis))
-			local secondaryRelativeToTriA = secondaryPoint - triA
-			local secondaryPoint2d =  Vector2.new(secondaryRelativeToTriA:Dot(planeXAxis), secondaryRelativeToTriA:Dot(planeYAxis))
-
-			local segmentEdgeIntersection2d do
-				local edge1SegmentIntersection = IntersectionPointOfLineSegments2d(triA2d, triB2d, primaryPoint2d, secondaryPoint2d)
-				if edge1SegmentIntersection then
-					segmentEdgeIntersection2d = edge1SegmentIntersection
-				else
-					segmentEdgeIntersection2d = IntersectionPointOfLineSegments2d(triC2d, triB2d, primaryPoint2d, secondaryPoint2d)
-				end
-			end
-
-			-- Convert intersection point back to 3d
-			local segmentEdgeIntersection = triA + (planeXAxis * segmentEdgeIntersection2d.X) + (planeYAxis * segmentEdgeIntersection2d.Y)
-			return ClosestPointsOfLineSegments(segA, segB, primaryPoint, segmentEdgeIntersection)
-		elseif secondaryRegion == 3 then
-			-- Projected segment intersects triEdgeBC
-			local planeXAxis = triEdgeAB.Unit
-			local planeYAxis = triNormalUnit:Cross(planeXAxis)
-
-			local triB2d = Vector2.new(triEdgeAB.Magntiude, 0)
-			local triC2d = Vector2.new(triEdgeAC:Dot(planeXAxis), triEdgeAC:Dot(planeYAxis))
-
-			local primaryRelativeToTriA = primaryPoint - triA
-			local primaryPoint2d = Vector2.new(primaryRelativeToTriA:Dot(planeXAxis), primaryRelativeToTriA:Dot(planeYAxis))
-			local secondaryRelativeToTriA = secondaryPoint - triA
-			local secondaryPoint2d =  Vector2.new(secondaryRelativeToTriA:Dot(planeXAxis), secondaryRelativeToTriA:Dot(planeYAxis))
-
-			local segmentEdgeIntersection2d = IntersectionPointOfLineSegments2d(triC2d, triB2d, primaryPoint2d, secondaryPoint2d)
-
-			-- Convert intersection point back to 3d
-			local segmentEdgeIntersection = triA + (planeXAxis * segmentEdgeIntersection2d.X) + (planeYAxis * segmentEdgeIntersection2d.Y)
-			return ClosestPointsOfLineSegments(segA, segB, primaryPoint, segmentEdgeIntersection)
-		elseif secondaryRegion == 4 then
-			-- Projected segment intersects triEdgeBC or triEdgeAC
-			local planeXAxis = triEdgeAB.Unit
-			local planeYAxis = triNormalUnit:Cross(planeXAxis)
-
-			local triA2d = Vector2.new()
-			local triB2d = Vector2.new(triEdgeAB.Magntiude, 0)
-			local triC2d = Vector2.new(triEdgeAC:Dot(planeXAxis), triEdgeAC:Dot(planeYAxis))
-
-			local primaryRelativeToTriA = primaryPoint - triA
-			local primaryPoint2d = Vector2.new(primaryRelativeToTriA:Dot(planeXAxis), primaryRelativeToTriA:Dot(planeYAxis))
-			local secondaryRelativeToTriA = secondaryPoint - triA
-			local secondaryPoint2d =  Vector2.new(secondaryRelativeToTriA:Dot(planeXAxis), secondaryRelativeToTriA:Dot(planeYAxis))
-
-			local segmentEdgeIntersection2d do
-				local edge1SegmentIntersection = IntersectionPointOfLineSegments2d(triC2d, triB2d, primaryPoint2d, secondaryPoint2d)
-				if edge1SegmentIntersection then
-					segmentEdgeIntersection2d = edge1SegmentIntersection
-				else
-					segmentEdgeIntersection2d = IntersectionPointOfLineSegments2d(triC2d, triA2d, primaryPoint2d, secondaryPoint2d)
-				end
-			end
-
-			-- Convert intersection point back to 3d
-			local segmentEdgeIntersection = triA + (planeXAxis * segmentEdgeIntersection2d.X) + (planeYAxis * segmentEdgeIntersection2d.Y)
-			return ClosestPointsOfLineSegments(segA, segB, primaryPoint, segmentEdgeIntersection)
-		elseif secondaryRegion == 5 then
-			-- Projected segment intersects triEdgeBC
-			local planeXAxis = triEdgeAB.Unit
-			local planeYAxis = triNormalUnit:Cross(planeXAxis)
-
-			local triA2d = Vector2.new()
-			local triC2d = Vector2.new(triEdgeAC:Dot(planeXAxis), triEdgeAC:Dot(planeYAxis))
-
-			local primaryRelativeToTriA = primaryPoint - triA
-			local primaryPoint2d = Vector2.new(primaryRelativeToTriA:Dot(planeXAxis), primaryRelativeToTriA:Dot(planeYAxis))
-			local secondaryRelativeToTriA = secondaryPoint - triA
-			local secondaryPoint2d =  Vector2.new(secondaryRelativeToTriA:Dot(planeXAxis), secondaryRelativeToTriA:Dot(planeYAxis))
-
-			local segmentEdgeIntersection2d = IntersectionPointOfLineSegments2d(triC2d, triA2d, primaryPoint2d, secondaryPoint2d)
-
-			-- Convert intersection point back to 3d
-			local segmentEdgeIntersection = triA + (planeXAxis * segmentEdgeIntersection2d.X) + (planeYAxis * segmentEdgeIntersection2d.Y)
-			return ClosestPointsOfLineSegments(segA, segB, primaryPoint, segmentEdgeIntersection)
-		elseif secondaryRegion == 6 then
-			-- Projected segment intersects TriEdgeAC or triEdgeAB
-			local planeXAxis = triEdgeAB.Unit
-			local planeYAxis = triNormalUnit:Cross(planeXAxis)
-
-			local triA2d = Vector2.new()
-			local triB2d = Vector2.new(triEdgeAB.Magntiude, 0)
-			local triC2d = Vector2.new(triEdgeAC:Dot(planeXAxis), triEdgeAC:Dot(planeYAxis))
-
-			local primaryRelativeToTriA = primaryPoint - triA
-			local primaryPoint2d = Vector2.new(primaryRelativeToTriA:Dot(planeXAxis), primaryRelativeToTriA:Dot(planeYAxis))
-			local secondaryRelativeToTriA = secondaryPoint - triA
-			local secondaryPoint2d =  Vector2.new(secondaryRelativeToTriA:Dot(planeXAxis), secondaryRelativeToTriA:Dot(planeYAxis))
-
-			local segmentEdgeIntersection2d do
-				local edge1SegmentIntersection = IntersectionPointOfLineSegments2d(triA2d, triC2d, primaryPoint2d, secondaryPoint2d)
-				if edge1SegmentIntersection then
-					segmentEdgeIntersection2d = edge1SegmentIntersection
-				else
-					segmentEdgeIntersection2d = IntersectionPointOfLineSegments2d(triA2d, triB2d, primaryPoint2d, secondaryPoint2d)
-				end
-			end
-
-			-- Convert intersection point back to 3d
-			local segmentEdgeIntersection = triA + (planeXAxis * segmentEdgeIntersection2d.X) + (planeYAxis * segmentEdgeIntersection2d.Y)
-			return ClosestPointsOfLineSegments(segA, segB, primaryPoint, segmentEdgeIntersection)
-		end
-	elseif primaryRegion == 1 then
-		if secondaryRegion == 1 or secondaryRegion == 2 or secondaryRegion == 6 then
-			return ClosestPointsOfLineSegments(segA, segB, triA, triB)
-		elseif secondaryRegion == 3 then
-			-- Intersect triEdgeAB and triEdgeBC
-		elseif secondaryRegion == 4 then
-			-- Intersect triEdgeAB, Test Intersect triEdgeBC and triEdgeAC
-		elseif secondaryRegion == 5 then
-			-- Intersect triEdgeAC
-		end
-	elseif primaryRegion == 2 then
-		if secondaryRegion == 2 then
-			return ClosestPointOnLineSegmentToPoint(segA, segB, triB), triB
-		elseif secondaryRegion == 3 or secondaryRegion == 4 then
-			return ClosestPointsOfLineSegments(segA, segB, triB, triC)
-		elseif secondaryRegion == 5 then
-			-- Intersect triEdgeAC, test triEdgeAB triEdgeBC
-		elseif secondaryRegion == 6 then
-			return ClosestPointsOfLineSegments(segA, segB, triA, triB)
-		end
-	elseif primaryRegion == 3 then
-		if secondaryRegion == 3 or secondaryRegion == 4 then 
-			return ClosestPointsOfLineSegments(segA, segB, triB, triC)
-		elseif secondaryRegion == 5 then
-			-- Intersect triEdgeBC, triEdgeAC
-		elseif secondaryRegion == 6 then
-			-- Intersect triEdgeBC, Test triEdgeAB and triEdgeAC
-		end
-	elseif primaryRegion == 4 or primaryRegion == 5 then
-		-- Secondary region must be 4, 5, or 6.
-		if secondaryRegion == 4 then -- Primary region must be 4
-			return ClosestPointOnLineSegmentToPoint(segA, segB, triC), triC
-		end
-
-		return ClosestPointsOfLineSegments(segA, segB, triA, triC)
-	elseif primaryRegion == 6 then
-		-- Secondary region must be 6
-		return ClosestPointOnLineSegmentToPoint(segA, segB, triA), triA
+	if not clampedB then
+		return ClosestPointOnLineSegmentToPoint(segA, segB, clampedA), clampedA, nil, nil, projectedSegA, projectedSegB
 	end
+
+	local a, b = ClosestPointsOfLineSegments(segA, segB, clampedA, clampedB)
+
+	return a, b, clampedA, clampedB, projectedSegA, projectedSegB
 end
+
 
 return ClosestPointsOfLineSegmentAndTriangle
