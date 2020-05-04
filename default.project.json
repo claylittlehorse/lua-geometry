@@ -1,5 +1,5 @@
 {
-	"name": "Collisions",
+	"name": "LuaGeometry",
 	"tree": {
 		"$path": "src"
 	}
