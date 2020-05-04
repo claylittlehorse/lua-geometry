@@ -1,2 +1,2 @@
-# lua-collisions
-Primitive intersection checks and more for use in (roblox) lua
+# lua-geometry
+Useful geometry functions for use in roblox lua
