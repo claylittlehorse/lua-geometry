@@ -128,8 +128,6 @@ local function clampSegmentPointsToRectangle(segA, segB, rectA, rectB, rectC, re
 	local segARegion = Utils.getPlaneRegionFromRectangle(segA2dX, rectLength, segA2dY, rectHeight)
 	local segBRegion = Utils.getPlaneRegionFromRectangle(segB2dX, rectLength, segB2dY, rectHeight)
 
-	print("A region", segARegion, "B Region", segBRegion)
-
 	if segBRegion < segARegion then
 		segARegion, segBRegion = segBRegion, segARegion
 		segA2dX, segA2dY, segB2dX, segB2dY = segB2dX, segB2dY, segA2dX, segA2dY
