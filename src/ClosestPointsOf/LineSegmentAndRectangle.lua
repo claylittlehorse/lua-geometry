@@ -170,20 +170,11 @@ end
 local function ClosestPointsOfLineSegmentAndRectangle(segA, segB, rectA, rectB, rectC, rectD)
 	local clampedA, clampedB = clampSegmentPointsToRectangle(segA, segB, rectA, rectB, rectC, rectD)
 
-	local rectEdgeAB = rectB - rectA
-	local rectEdgeAD = rectD - rectA
-	local rectangleNormal = rectEdgeAB:Cross(rectEdgeAD).Unit
-
-	local projectedA = ClosestPointOnPlaneToPoint(segA, rectA, rectangleNormal)
-	local projectedB = ClosestPointOnPlaneToPoint(segB, rectA, rectangleNormal)
-
 	if not clampedB then
-		return ClosestPointOnLineSegmentToPoint(segA, segB, clampedA), clampedA, clampedA, clampedB, projectedA, projectedB
+		return ClosestPointOnLineSegmentToPoint(segA, segB, clampedA), clampedA
 	end
 
-	local resultA, resultB = ClosestPointsOfLineSegments(segA, segB, clampedA, clampedB)
-
-	return  resultA, resultB, clampedA, clampedB, projectedA, projectedB
+	return ClosestPointsOfLineSegments(segA, segB, clampedA, clampedB)
 end
 
 return ClosestPointsOfLineSegmentAndRectangle
