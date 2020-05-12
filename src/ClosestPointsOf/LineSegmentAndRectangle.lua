@@ -1,6 +1,8 @@
 local ClosestPointOnLineSegmentToPoint = require(script.Parent.Parent.ClosestPointOn.LineSegmentToPoint)
 local ClosestPointsOfLineSegments = require(script.Parent.LineSegments)
 local Utils = require(script.Parent.Parent.Utils)
+local getPlaneRegionFromRectangle = Utils.getPlaneRegionFromRectangle
+local getIntersectionForRectangle2dRaw = Utils.getIntersectionForRectangle2dRaw
 
 local function clampSegmentPointsToRectangle(segA, segB, rectA, rectB, rectC, rectD)
 	local rectEdgeAB = rectB - rectA
@@ -21,8 +23,8 @@ local function clampSegmentPointsToRectangle(segA, segB, rectA, rectB, rectC, re
 	local bX = lineRectASegB:Dot(rectangleXAxis)
 	local bY = lineRectASegB:Dot(rectangleYAxis)
 
-	local segARegion = Utils.getPlaneRegionFromRectangle(aX, aY, sizeX, sizeY)
-	local segBRegion = Utils.getPlaneRegionFromRectangle(bX, bY, sizeX, sizeY)
+	local segARegion = getPlaneRegionFromRectangle(aX, aY, sizeX, sizeY)
+	local segBRegion = getPlaneRegionFromRectangle(bX, bY, sizeX, sizeY)
 
 	if segBRegion < segARegion then
 		segARegion, segBRegion = segBRegion, segARegion
@@ -54,8 +56,8 @@ local function clampSegmentPointsToRectangle(segA, segB, rectA, rectB, rectC, re
 		return rectD, rectA
 	end
 
-	local aXClamped, aYClamped = Utils.getIntersectionForRectangle2dRaw(aX, aY, bX, bY, sizeX, sizeY)
-	local bXClamped, bYClamped = Utils.getIntersectionForRectangle2dRaw(aX, aY, bX, bY, sizeX, sizeY)
+	local aXClamped, aYClamped = getIntersectionForRectangle2dRaw(aX, aY, bX, bY, sizeX, sizeY)
+	local bXClamped, bYClamped = getIntersectionForRectangle2dRaw(aX, aY, bX, bY, sizeX, sizeY)
 
 	return rectA + rectangleXAxis * aXClamped + rectangleYAxis * aYClamped,
 		   rectA + rectangleXAxis * bXClamped + rectangleYAxis * bYClamped
