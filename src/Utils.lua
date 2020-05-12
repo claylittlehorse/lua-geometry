@@ -160,4 +160,301 @@ function Utils.getIntersectionForRectangle2d(aX, aY, bX, bY, xSize, ySize)
 	return Vector2.new(x, y)
 end
 
+local function clampToLeftFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+	local yzScalar = (xSize + aX) / (aX - bX)
+
+	local y = aY + yzScalar * (bY - aY)
+	local z = aZ + yzScalar * (bZ - aZ)
+
+	local didIntersect = true
+
+	if y < -ySize then
+		didIntersect = false
+		y = -ySize
+	elseif y > ySize then
+		didIntersect = false
+		y = zSize
+	end
+
+	if z < -zSize then
+		didIntersect = false
+		z = -zSize
+	elseif z > zSize then
+		didIntersect = false
+		z = zSize
+	end
+
+	return -xSize, y, z, didIntersect
+end
+
+local function clampToRightFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+	local yzScalar = (xSize - aX) / (bX - aX)
+
+	local y = aY + yzScalar * (bY - aY)
+	local z = aZ + yzScalar * (bZ - aZ)
+
+	local didIntersect = true
+
+	if y < -ySize then
+		didIntersect = false
+		y = -ySize
+	elseif y > ySize then
+		didIntersect = false
+		y = zSize
+	end
+
+	if z < -zSize then
+		didIntersect = false
+		z = -zSize
+	elseif z > zSize then
+		didIntersect = false
+		z = zSize
+	end
+
+	return xSize, y, z, didIntersect
+end
+
+local function clampToBottomFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+	local xzScalar = (ySize + aY) / (aY - bY)
+
+	local x = aX + xzScalar * (bX - aX)
+	local z = aZ + xzScalar * (bZ - aZ)
+
+	local didIntersect = true
+
+	if x < -xSize then
+		didIntersect = false
+		x = -xSize
+	elseif x > xSize then
+		didIntersect = false
+		x = xSize
+	end
+
+	if z < -zSize then
+		didIntersect = false
+		z = -zSize
+	elseif z > zSize then
+		didIntersect = false
+		z = zSize
+	end
+
+	return x, -ySize, z, didIntersect
+end
+
+local function clampToTopFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+	local xzScalar = (ySize - aY) / (bY - aY)
+
+	local x = aX + xzScalar * (bX - aX)
+	local z = aZ + xzScalar * (bZ - aZ)
+
+	local didIntersect = true
+
+	if x < -xSize then
+		didIntersect = false
+		x = -xSize
+	elseif x > xSize then
+		didIntersect = false
+		x = xSize
+	end
+
+	if z < -zSize then
+		didIntersect = false
+		z = -zSize
+	elseif z > zSize then
+		didIntersect = false
+		z = zSize
+	end
+
+	return x, ySize, z, didIntersect
+end
+
+local function clampToBackFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+	local xyScalar = (zSize + aZ) / (aZ - bZ)
+
+	local x = aX + xyScalar * (bX - aX)
+	local y = aY + xyScalar * (bY - aY)
+
+	local didIntersect = true
+
+	if x < -xSize then
+		didIntersect = false
+		x = -xSize
+	elseif x > xSize then
+		didIntersect = false
+		x = xSize
+	end
+
+	if y < -ySize then
+		didIntersect = false
+		y = -ySize
+	elseif y > ySize then
+		didIntersect = false
+		y = ySize
+	end
+
+	return x, y, -zSize, didIntersect
+end
+
+local function clampToFrontFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+	local xyScalar = (zSize - aZ) / (bZ - aZ)
+
+	local x = aX + xyScalar * (bX - aX)
+	local y = aY + xyScalar * (bY - aY)
+
+	local didIntersect = true
+
+	if x < -xSize then
+		didIntersect = false
+		x = -xSize
+	elseif x > xSize then
+		didIntersect = false
+		x = xSize
+	end
+
+	if y < -ySize then
+		didIntersect = false
+		y = -ySize
+	elseif y > ySize then
+		didIntersect = false
+		y = ySize
+	end
+
+	return x, y, zSize, didIntersect
+end
+
+function Utils.getIntersectionForOBBRaw(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+	if aX < -xSize then
+		-- Could intersect left face
+		local resultX, resultY, resultZ, didIntersect = clampToLeftFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+
+		if didIntersect then
+			return resultX, resultY, resultZ
+		end
+	elseif aX > xSize then
+		-- Could intersect right face
+		local resultX, resultY, resultZ, didIntersect = clampToRightFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+
+		if didIntersect then
+			return resultX, resultY, resultZ
+		end
+	end
+
+	if aY < -ySize then
+		-- Could intersect bottom face
+		local resultX, resultY, resultZ, didIntersect = clampToBottomFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+
+		if didIntersect then
+			return resultX, resultY, resultZ
+		end
+	elseif aY > ySize then
+		-- Could intersect top face
+		local resultX, resultY, resultZ, didIntersect = clampToTopFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+
+		if didIntersect then
+			return resultX, resultY, resultZ
+		end
+	end
+
+	if aZ < -zSize then
+		-- By process of elimintation, intersects back face
+		return clampToBackFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+	elseif aZ < zSize then
+		-- By process of elimintation, does not intersect any face
+		return aX, aY, aZ
+	else
+		-- By process of elimintation, intersects front face
+		return clampToFrontFace(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+	end
+end
+
+function Utils.getIntersectionForOBB(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+	local x, y, z = Utils.getIntersectionForOBBRaw(aX, aY, aZ, bX, bY, bZ, xSize, ySize, zSize)
+
+	return Vector3.new(x, y, z)
+end
+
+-- Rectangle intersection center origin
+
+local function clampSegmentToLeftEdge_centerOrigin(aX, aY, bX, bY, xSize, ySize)
+	local yScalar = (xSize + aX) / (aX - bX)
+	local y = aY + yScalar * (bY - aY)
+
+	-- Clamp Y between 0 and ySize
+	if y < -ySize then
+		return -xSize, -ySize, false
+	elseif y > ySize then
+		return -xSize, ySize, false
+	else
+		return -xSize, y, true
+	end
+end
+local function clampSegmentToRightEdge_centerOrigin(aX, aY, bX, bY, xSize, ySize)
+	local yScalar = (xSize - aX) / (bX - aX)
+	local y = aY + yScalar * (bY - aY)
+
+	-- Clamp Y between 0 and ySize
+	if y < -ySize then
+		return xSize, -ySize, false
+	elseif y > ySize then
+		return xSize, ySize, false
+	else
+		return xSize, y, true
+	end
+end
+local function clampSegmentToBottomEdge_centerOrigin(aX, aY, bX, bY, xSize, ySize)
+	local xScalar = (ySize + aY) / (aY - bY)
+	local x = aX + xScalar * (bX - aX)
+
+	-- Clamp X between 0 and xSize
+	if x < -xSize then
+		return -xSize, -ySize, false
+	elseif x > xSize then
+		return xSize, -ySize, false
+	else
+		return x, -ySize, true
+	end
+end
+local function clampSegmentToTopEdge_centerOrigin(aX, aY, bX, bY, xSize, ySize)
+	local xScalar = (ySize - aY) / (bY - aY)
+	local x = aX + xScalar * (bX - aX)
+
+	-- Clamp X between 0 and xSize
+	if x < -xSize then
+		return -xSize, ySize, false
+	elseif x > xSize then
+		return xSize, ySize, false
+	else
+		return x, ySize, true
+	end
+end
+
+function Utils.getIntersectionForRectangle2dRaw_centerOrigin(aX, aY, bX, bY, xSize, ySize)
+	if aX < -xSize then
+		-- Line could intersect left edge.
+		local resultX, resultY, didIntersect = clampSegmentToLeftEdge_centerOrigin(aX, aY, bX, bY, xSize, ySize)
+
+		if didIntersect then
+			return resultX, resultY
+		end
+	elseif aX > xSize then
+		-- Line could intersect right edge.
+		local resultX, resultY, didIntersect = clampSegmentToRightEdge_centerOrigin(aX, aY, bX, bY, xSize, ySize)
+
+		if didIntersect then
+			return resultX, resultY
+		end
+	end
+
+	if aY < -ySize then
+		-- Line intersects bottom edge
+		return clampSegmentToBottomEdge_centerOrigin(aX, aY, bX, bY, xSize, ySize)
+	elseif aY < ySize then
+		-- No intersection
+		return aX, aY
+	else
+		-- Line intersects top edge
+		return clampSegmentToTopEdge_centerOrigin(aX, aY, bX, bY, xSize, ySize)
+	end
+end
+
 return Utils
