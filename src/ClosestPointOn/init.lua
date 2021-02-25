@@ -1,8 +1,9 @@
 return {
-	LineSegmentToPoint = require(script.LineSegmentToPoint),
-	PlaneToPoint = require(script.PlaneToPoint),
 	AABBToPoint = require(script.AABBToPoint),
+	LineSegmentToLineSegment2d = require(script.LineSegmentToLineSegment2d),
+	LineSegmentToPoint = require(script.LineSegmentToPoint),
 	OBBToPoint = require(script.OBBToPoint),
+	PlaneToPoint = require(script.PlaneToPoint),
 	TriangleToPoint = require(script.TriangleToPoint),
-	LineSegmentToLineSegment2d = require(script.LineSegmentToLineSegment2d)
+	TriangleToPoint2d = require(script.TriangleToPoint2d),
 }

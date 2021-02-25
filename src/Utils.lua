@@ -457,4 +457,17 @@ function Utils.getIntersectionForRectangle2dRaw_centerOrigin(aX, aY, bX, bY, xSi
 	end
 end
 
+function Utils.GetTriangleArea2d(x1, y1, x2, y2, x3, y3)
+	return (x1 - x2)*(y2-y3) - (x2-x3)*(y1-y2)
+end
+
+function Utils.GetBarycentricCoordinates2d(point, triA, triB, triC)
+	local areaScalar = 1 / Utils.GetTriangleArea2d(triA.X, triA.Y, triB.X, triB.Y, triC.X, triC.Y)
+	local u = Utils.GetTriangleArea2d(point.X, point.Y, triA.X, triA.Y, triB.X, triB.Y) * areaScalar
+	local v = Utils.GetTriangleArea2d(point.X, point.Y, triC.X, triC.Y, triA.X, triA.Y) * areaScalar
+	local w = 1 - u - v
+
+	return u, v, w
+end
+
 return Utils
