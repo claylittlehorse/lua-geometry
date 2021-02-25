@@ -3,7 +3,7 @@ local function GetTriangleArea2d(x1, y1, x2, y2, x3, y3)
 end
 
 local function GetBarycentricCoordinates(point, triA, triB, triC)
-	local areaScalar = 1 / GetTriangleArea2d(triA.X, triA.X, triB.Y, triB.Y, triC.X, triC.Y)
+	local areaScalar = 1 / GetTriangleArea2d(triA.X, triA.Y, triB.X, triB.Y, triC.X, triC.Y)
 	local u = GetTriangleArea2d(point.X, point.Y, triB.X, triB.Y, triC.X, triC.Y) * areaScalar
 	local v = GetTriangleArea2d(point.X, point.Y, triC.X, triC.Y, triA.X, triA.Y) * areaScalar
 	local w = 1 - u - v
