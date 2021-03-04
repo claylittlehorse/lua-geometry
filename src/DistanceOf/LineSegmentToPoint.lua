@@ -5,6 +5,10 @@ local DistanceOfLineSegmentToPointSquared = require(script.Parent.LineSegmentToP
 
 local function DistanceOfLineSegmentToPoint(segmentPointA, segmentPointB, pointC)
 	local distanceSquared = DistanceOfLineSegmentToPointSquared(segmentPointA, segmentPointB, pointC)
+	if distanceSquared < 0 then
+		return 0
+	end
+
 	return math.sqrt(distanceSquared)
 end
 
