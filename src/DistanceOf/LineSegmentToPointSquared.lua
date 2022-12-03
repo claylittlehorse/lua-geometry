@@ -15,7 +15,7 @@ local function DistanceOfLineSegmentToPointSquared(segmentPointA, segmentPointB,
 		return ac:Dot(ac)
 	end
 
-	local f = ab:dot(ab)
+	local f = ab:Dot(ab)
 	if e >= f then
 		return bc:Dot(bc)
 	end
